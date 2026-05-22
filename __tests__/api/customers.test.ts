@@ -1,6 +1,9 @@
+/** @jest-environment node */
 import { GET, POST } from "@/app/api/customers/route";
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
+
+const mockSession = { user: { id: "1", name: "Admin", email: "admin@test.com" } };
 
 jest.mock("@/lib/prisma", () => ({
   prisma: {
@@ -11,9 +14,13 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 
-jest.mock("@/lib/auth", () => ({
-  auth: jest.fn().mockResolvedValue({ user: { id: "1", name: "Admin", email: "admin@test.com" } }),
-}));
+jest.mock("@/lib/auth", () => ({ auth: jest.fn() }));
+const { auth } = jest.requireMock("@/lib/auth");
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  auth.mockResolvedValue(mockSession);
+});
 
 describe("GET /api/customers", () => {
   it("returns customers list", async () => {
@@ -28,6 +35,11 @@ describe("GET /api/customers", () => {
     expect(res.status).toBe(200);
     expect(data).toHaveLength(1);
     expect(data[0].name).toBe("Alice");
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    auth.mockResolvedValue(null);
+    expect((await GET()).status).toBe(401);
   });
 });
 
@@ -58,5 +70,15 @@ describe("POST /api/customers", () => {
 
     const res = await POST(req);
     expect(res.status).toBe(400);
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    auth.mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/customers", {
+      method: "POST",
+      body: JSON.stringify({}),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await POST(req)).status).toBe(401);
   });
 });

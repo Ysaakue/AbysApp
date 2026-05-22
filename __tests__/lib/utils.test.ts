@@ -1,4 +1,18 @@
-import { calculateOrderTotal, formatCurrency } from "@/lib/utils";
+import { calculateOrderTotal, formatCurrency, cn } from "@/lib/utils";
+
+describe("cn", () => {
+  it("merges class names", () => {
+    expect(cn("foo", "bar")).toBe("foo bar");
+  });
+
+  it("resolves Tailwind conflicts (last wins)", () => {
+    expect(cn("p-2", "p-4")).toBe("p-4");
+  });
+
+  it("ignores falsy values", () => {
+    expect(cn("foo", false && "bar", undefined)).toBe("foo");
+  });
+});
 
 describe("calculateOrderTotal", () => {
   it("returns 0 when both arrays are empty", () => {

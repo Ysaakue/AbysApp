@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  orders   ServiceOrder[]
+  comments Comment[]
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  email     String?
+  createdAt DateTime @default(now())
+
+  orders ServiceOrder[]
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+
+  orderItems OrderServiceItem[]
+}
+
+model Part {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+
+  movements  StockMovement[]
+  orderItems OrderPartItem[]
+}
+
+model StockMovement {
+  id              Int           @id @default(autoincrement())
+  partId          Int
+  part            Part          @relation(fields: [partId], references: [id])
+  orderPartItemId Int?          @unique
+  orderPartItem   OrderPartItem? @relation(fields: [orderPartItemId], references: [id])
+  type            MovementType
+  quantity        Int
+  price           Decimal       @db.Decimal(10, 2)
+  notes           String?       @db.VarChar(50)
+  createdAt       DateTime      @default(now())
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+model Device {
+  id          Int     @id @default(autoincrement())
+  brand       String
+  model       String
+  notes       String?
+
+  orders ServiceOrder[]
+}
+
+model OrderStatus {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  color String?
+
+  orders ServiceOrder[]
+}
+
+model ServiceOrder {
+  id                 Int         @id @default(autoincrement())
+  customerId         Int
+  customer           Customer    @relation(fields: [customerId], references: [id])
+  deviceId           Int
+  device             Device      @relation(fields: [deviceId], references: [id])
+  problemDescription String      @db.VarChar(200)
+  statusId           Int
+  status             OrderStatus @relation(fields: [statusId], references: [id])
+  createdAt          DateTime    @default(now())
+  completedAt        DateTime?
+  createdById        Int
+  createdBy          User        @relation(fields: [createdById], references: [id])
+
+  services  OrderServiceItem[]
+  parts     OrderPartItem[]
+  comments  Comment[]
+}
+
+model OrderServiceItem {
+  id        Int          @id @default(autoincrement())
+  orderId   Int
+  order     ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  serviceId Int
+  service   Service      @relation(fields: [serviceId], references: [id])
+  unitPrice Decimal      @db.Decimal(10, 2)
+  quantity  Int          @default(1)
+}
+
+model OrderPartItem {
+  id        Int          @id @default(autoincrement())
+  orderId   Int
+  order     ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  partId    Int
+  part      Part         @relation(fields: [partId], references: [id])
+  unitPrice Decimal      @db.Decimal(10, 2)
+  quantity  Int          @default(1)
+
+  stockMovement StockMovement?
+}
+
+model Comment {
+  id        Int          @id @default(autoincrement())
+  orderId   Int
+  order     ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  authorId  Int
+  author    User         @relation(fields: [authorId], references: [id])
+  text      String
+  createdAt DateTime     @default(now())
+}

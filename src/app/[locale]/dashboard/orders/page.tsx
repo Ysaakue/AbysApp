@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useFormatter } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Pagination } from "@/components/ui/Pagination";
 import { formatCurrency } from "@/lib/utils";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 interface Order {
   id: number;
@@ -26,6 +27,9 @@ interface Device { id: number; brand: string; model: string }
 interface OrderStatus { id: number; name: string; color: string | null }
 
 export default function OrdersPage() {
+  const t = useTranslations("orders");
+  const tc = useTranslations("common");
+  const format = useFormatter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -74,7 +78,7 @@ export default function OrdersPage() {
     const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     setLoading(false);
     if (res.ok) { setModal(false); loadOrders(); }
-    else { const d = await res.json(); setError(d.error ?? "Error"); }
+    else { const d = await res.json(); setError(d.error ?? tc("error")); }
   }
 
   function calcTotal(o: Order): number {
@@ -86,21 +90,21 @@ export default function OrdersPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Service Orders</h1>
-        <Button onClick={() => { setModal(true); setError(""); }}>+ New Order</Button>
+        <h1 className="text-2xl font-semibold text-gray-900">{t("title")}</h1>
+        <Button onClick={() => { setModal(true); setError(""); }}>{t("newBtn")}</Button>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">#</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Customer</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Device</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Status</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Total</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Created</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Actions</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colId")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colCustomer")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colDevice")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colStatus")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colTotal")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colCreated")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colActions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -118,16 +122,18 @@ export default function OrdersPage() {
                   </span>
                 </td>
                 <td className="px-4 py-2 font-medium">{formatCurrency(calcTotal(o))}</td>
-                <td className="px-4 py-2 text-gray-500">{new Date(o.createdAt).toLocaleDateString("en-US")}</td>
+                <td className="px-4 py-2 text-gray-500">
+                  {format.dateTime(new Date(o.createdAt), { dateStyle: "short" })}
+                </td>
                 <td className="px-4 py-2">
                   <Link href={`/dashboard/orders/${o.id}`}>
-                    <Button variant="secondary" size="sm">View</Button>
+                    <Button variant="secondary" size="sm">{t("viewBtn")}</Button>
                   </Link>
                 </td>
               </tr>
             ))}
             {orders.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-400">No orders found.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-400">{t("empty")}</td></tr>
             )}
           </tbody>
         </table>
@@ -143,19 +149,19 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <Modal open={modal} onClose={() => setModal(false)} title="New Service Order" size="lg">
+      <Modal open={modal} onClose={() => setModal(false)} title={t("modalTitle")} size="lg">
         <form onSubmit={handleCreate} className="space-y-4">
-          <Select id="customerId" name="customerId" label="Customer" required placeholder="Select customer..."
+          <Select id="customerId" name="customerId" label={t("fieldCustomer")} required placeholder={t("selectCustomer")}
             options={customers.map((c) => ({ value: c.id, label: c.name }))} />
-          <Select id="deviceId" name="deviceId" label="Device" required placeholder="Select device..."
+          <Select id="deviceId" name="deviceId" label={t("fieldDevice")} required placeholder={t("selectDevice")}
             options={devices.map((d) => ({ value: d.id, label: `${d.brand} ${d.model}` }))} />
-          <Select id="statusId" name="statusId" label="Status" required placeholder="Select status..."
+          <Select id="statusId" name="statusId" label={t("fieldStatus")} required placeholder={t("selectStatus")}
             options={statuses.map((s) => ({ value: s.id, label: s.name }))} />
-          <Textarea id="problemDescription" name="problemDescription" label="Problem Description (max 200 chars)" required maxLength={200} rows={3} />
+          <Textarea id="problemDescription" name="problemDescription" label={t("fieldProblem")} required maxLength={200} rows={3} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="secondary" onClick={() => setModal(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Creating..." : "Create Order"}</Button>
+            <Button type="button" variant="secondary" onClick={() => setModal(false)}>{tc("cancel")}</Button>
+            <Button type="submit" disabled={loading}>{loading ? t("creating") : t("createBtn")}</Button>
           </div>
         </form>
       </Modal>

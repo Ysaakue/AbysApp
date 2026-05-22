@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 
 export default function LoginPage() {
+  const t = useTranslations("login");
+  const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +27,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password.");
+      setError(t("invalidCredentials"));
     } else {
       router.push("/dashboard");
       router.refresh();
@@ -36,7 +39,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">AbysApp</h1>
-          <p className="text-gray-500 mt-1">Service Order Management</p>
+          <p className="text-gray-500 mt-1">{t("subtitle")}</p>
         </div>
 
         <form
@@ -48,7 +51,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -65,7 +68,7 @@ export default function LoginPage() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Password
+              {t("password")}
             </label>
             <input
               id="password"
@@ -88,7 +91,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? t("submitting") : t("submit")}
           </button>
         </form>
       </div>

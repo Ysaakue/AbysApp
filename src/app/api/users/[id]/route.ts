@@ -9,6 +9,7 @@ const updateSchema = z.object({
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
   active: z.boolean().optional(),
+  locale: z.enum(["en", "pt"]).optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

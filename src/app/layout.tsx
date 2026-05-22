@@ -1,18 +1,11 @@
-import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "AbysApp - Service Orders",
-  description: "Tech support service order management system",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className="h-full">
+    <html lang={locale} className="h-full">
       <body className="min-h-full">{children}</body>
     </html>
   );

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useTranslations, useFormatter } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -26,6 +28,9 @@ interface Part {
 export default function StockPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations("stock");
+  const tc = useTranslations("common");
+  const format = useFormatter();
   const [part, setPart] = useState<Part | null>(null);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [total, setTotal] = useState(0);
@@ -75,37 +80,37 @@ export default function StockPage() {
       loadMovements();
     } else {
       const d = await res.json();
-      setError(d.error ?? "Error");
+      setError(d.error ?? tc("error"));
     }
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>← Back</Button>
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>{tc("back")}</Button>
         <h1 className="text-2xl font-semibold text-gray-900">
-          Stock: {part?.name ?? "Loading..."}
+          {part ? t("title", { name: part.name }) : tc("loading")}
         </h1>
         {part && (
           <span className={`text-lg font-bold ${part.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-            ({part.stock} units)
+            {t("units", { count: part.stock })}
           </span>
         )}
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => { setModal(true); setError(""); }}>+ Add Movement</Button>
+        <Button onClick={() => { setModal(true); setError(""); }}>{t("addBtn")}</Button>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Type</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Qty</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Unit Price</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Notes</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-500">Date</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colType")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colQty")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colPrice")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colNotes")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colDate")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -120,12 +125,12 @@ export default function StockPage() {
                 <td className="px-4 py-2">{formatCurrency(m.price)}</td>
                 <td className="px-4 py-2 text-gray-500">{m.notes ?? "—"}</td>
                 <td className="px-4 py-2 text-gray-500">
-                  {new Date(m.createdAt).toLocaleString("en-US")}
+                  {format.dateTime(new Date(m.createdAt), { dateStyle: "short", timeStyle: "short" })}
                 </td>
               </tr>
             ))}
             {movements.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">No movements found.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">{t("empty")}</td></tr>
             )}
           </tbody>
         </table>
@@ -141,25 +146,25 @@ export default function StockPage() {
         </div>
       </div>
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Add Stock Movement">
+      <Modal open={modal} onClose={() => setModal(false)} title={t("modalTitle")}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700">{t("fieldType")}</label>
             <select id="type" name="type" required className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-              <option value="IN">IN (receiving stock)</option>
-              <option value="OUT">OUT (manual withdrawal)</option>
+              <option value="IN">{t("typeIn")}</option>
+              <option value="OUT">{t("typeOut")}</option>
             </select>
           </div>
-          <Input id="quantity" name="quantity" type="number" min="1" label="Quantity" required />
-          <Input id="price" name="price" type="number" step="0.01" min="0" label="Unit Price (R$)" required />
+          <Input id="quantity" name="quantity" type="number" min="1" label={t("fieldQty")} required />
+          <Input id="price" name="price" type="number" step="0.01" min="0" label={t("fieldPrice")} required />
           <div className="space-y-1">
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (max 50 chars)</label>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700">{t("fieldNotes")}</label>
             <input id="notes" name="notes" type="text" maxLength={50} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="secondary" onClick={() => setModal(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save"}</Button>
+            <Button type="button" variant="secondary" onClick={() => setModal(false)}>{tc("cancel")}</Button>
+            <Button type="submit" disabled={loading}>{loading ? tc("saving") : tc("save")}</Button>
           </div>
         </form>
       </Modal>

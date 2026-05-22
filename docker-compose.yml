@@ -22,6 +22,8 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
+    environment:
+      DATABASE_URL: "postgresql://abysapp:abysapp@db:5432/abysapp"
     depends_on:
       db:
         condition: service_healthy

@@ -21,13 +21,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const [movements, total] = await Promise.all([
     prisma.stockMovement.findMany({
-      where: { partId: Number(id), orderPartItemId: null },
+      where: { partId: Number(id) },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
     prisma.stockMovement.count({
-      where: { partId: Number(id), orderPartItemId: null },
+      where: { partId: Number(id) },
     }),
   ]);
 

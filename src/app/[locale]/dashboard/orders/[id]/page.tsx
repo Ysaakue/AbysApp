@@ -6,14 +6,14 @@ import { useTranslations, useFormatter } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Select";
+import { Combobox } from "@/components/ui/Combobox";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { calculateOrderTotal, formatCurrency } from "@/lib/utils";
 
 interface ServiceItem { id: number; unitPrice: string; quantity: number; service: { id: number; name: string } }
 interface PartItem { id: number; unitPrice: string; quantity: number; part: { id: number; name: string } }
-interface Comment { id: number; text: string; createdAt: string; author: { id: number; name: string } }
+interface Comment { id: number; text: string; important: boolean; createdAt: string; author: { id: number; name: string } }
 
 interface Order {
   id: number;
@@ -117,6 +117,19 @@ export default function OrderDetailPage() {
     loadOrder();
   }
 
+  async function toggleImportant(comment: Comment) {
+    const next = !comment.important;
+    setOrder((prev) => prev ? {
+      ...prev,
+      comments: prev.comments.map((c) => c.id === comment.id ? { ...c, important: next } : c),
+    } : prev);
+    await fetch(`/api/orders/${id}/comments/${comment.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ important: next }),
+    });
+  }
+
   async function removeItem(type: "service" | "part", itemId: number) {
     if (!confirm(t("removeConfirm"))) return;
     const endpoint = type === "service" ? `/api/orders/${id}/services` : `/api/orders/${id}/parts`;
@@ -163,13 +176,12 @@ export default function OrderDetailPage() {
 
       <div className="bg-white rounded-lg shadow p-4 space-y-3">
         <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">{t("sectionStatus")}</h2>
-        <select
+        <Combobox
           value={order.status.id}
-          onChange={(e) => updateStatus(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-        >
-          {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+          onValueChange={(value) => updateStatus(value)}
+          options={statuses.map((s) => ({ value: s.id, label: s.name }))}
+          className="max-w-xs"
+        />
         <div className="text-xs text-gray-400">
           {t("createdBy", { date: format.dateTime(new Date(order.createdAt), { dateStyle: "short", timeStyle: "short" }), name: order.createdBy.name })}
           {order.completedAt && " " + t("completedAt", { date: format.dateTime(new Date(order.completedAt), { dateStyle: "short", timeStyle: "short" }) })}
@@ -259,10 +271,23 @@ export default function OrderDetailPage() {
         <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
           {order.comments.length === 0 && <p className="text-sm text-gray-400">{t("noComments")}</p>}
           {order.comments.map((c) => (
-            <div key={c.id} className="bg-gray-50 rounded-md p-3 text-sm">
+            <div key={c.id} className={`rounded-md p-3 text-sm ${c.important ? "bg-yellow-50 border border-yellow-200" : "bg-gray-50"}`}>
               <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                <span className="font-medium text-gray-600">{c.author.name}</span>
-                <span>{format.dateTime(new Date(c.createdAt), { dateStyle: "short", timeStyle: "short" })}</span>
+                <span className="flex items-center gap-1">
+                  {c.important && <span className="text-yellow-500" aria-hidden>★</span>}
+                  <span className="font-medium text-gray-600">{c.author.name}</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <span>{format.dateTime(new Date(c.createdAt), { dateStyle: "short", timeStyle: "short" })}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleImportant(c)}
+                    title={c.important ? t("unmarkImportant") : t("markImportant")}
+                    className={`text-base leading-none transition-colors ${c.important ? "text-yellow-400 hover:text-gray-400" : "text-gray-300 hover:text-yellow-400"}`}
+                  >
+                    ★
+                  </button>
+                </div>
               </div>
               <p className="text-gray-800 whitespace-pre-wrap">{c.text}</p>
             </div>
@@ -272,9 +297,9 @@ export default function OrderDetailPage() {
 
       <Modal open={addServiceModal} onClose={() => setAddServiceModal(false)} title={t("addServiceTitle")}>
         <form onSubmit={addService} className="space-y-4">
-          <Select id="serviceId" name="serviceId" label={t("colService")} required placeholder={t("selectService")}
+          <Combobox id="serviceId" name="serviceId" label={t("colService")} required placeholder={t("selectService")}
             options={services.map((s) => ({ value: s.id, label: s.name }))}
-            onChange={(e) => { const svc = services.find((s) => s.id === Number(e.target.value)); if (svc) { const inp = document.getElementById("svc-price") as HTMLInputElement; if (inp) inp.value = svc.price; } }} />
+            onValueChange={(value) => { const svc = services.find((s) => s.id === Number(value)); if (svc) { const inp = document.getElementById("svc-price") as HTMLInputElement; if (inp) inp.value = svc.price; } }} />
           <Input id="svc-price" name="unitPrice" type="number" step="0.01" min="0" label={t("fieldUnitPrice")} required />
           <Input id="svc-qty" name="quantity" type="number" min="1" label={t("fieldQty")} required defaultValue="1" />
           <div className="flex justify-end gap-2 pt-2">
@@ -286,9 +311,9 @@ export default function OrderDetailPage() {
 
       <Modal open={addPartModal} onClose={() => setAddPartModal(false)} title={t("addPartTitle")}>
         <form onSubmit={addPart} className="space-y-4">
-          <Select id="partId" name="partId" label={t("colPart")} required placeholder={t("selectPart")}
+          <Combobox id="partId" name="partId" label={t("colPart")} required placeholder={t("selectPart")}
             options={parts.map((p) => ({ value: p.id, label: p.name }))}
-            onChange={(e) => { const prt = parts.find((p) => p.id === Number(e.target.value)); if (prt) { const inp = document.getElementById("prt-price") as HTMLInputElement; if (inp) inp.value = prt.price; } }} />
+            onValueChange={(value) => { const prt = parts.find((p) => p.id === Number(value)); if (prt) { const inp = document.getElementById("prt-price") as HTMLInputElement; if (inp) inp.value = prt.price; } }} />
           <Input id="prt-price" name="unitPrice" type="number" step="0.01" min="0" label={t("fieldUnitPrice")} required />
           <Input id="prt-qty" name="quantity" type="number" min="1" label={t("fieldQty")} required defaultValue="1" />
           <div className="flex justify-end gap-2 pt-2">

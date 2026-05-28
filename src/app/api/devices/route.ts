@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 const schema = z.object({
   brand: z.string().min(1),
   model: z.string().min(1),
+  type: z.enum(["PHONE", "TABLET", "NOTEBOOK", "DESKTOP"]).optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 

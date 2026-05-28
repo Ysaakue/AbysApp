@@ -5,12 +5,16 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
+import { Combobox } from "@/components/ui/Combobox";
 import { Textarea } from "@/components/ui/Textarea";
+
+type DeviceType = "PHONE" | "TABLET" | "NOTEBOOK" | "DESKTOP";
 
 interface Device {
   id: number;
   brand: string;
   model: string;
+  type: DeviceType | null;
   notes: string | null;
 }
 
@@ -22,6 +26,13 @@ export default function DevicesPage() {
   const [selected, setSelected] = useState<Device | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const typeOptions: { value: string; label: string }[] = [
+    { value: "PHONE", label: t("typePHONE") },
+    { value: "TABLET", label: t("typeTABLET") },
+    { value: "NOTEBOOK", label: t("typeNOTEBOOK") },
+    { value: "DESKTOP", label: t("typeDESKTOP") },
+  ];
 
   async function load() {
     const res = await fetch("/api/devices");
@@ -35,9 +46,11 @@ export default function DevicesPage() {
     setError("");
     setLoading(true);
     const form = new FormData(e.currentTarget);
+    const typeVal = form.get("type") as string;
     const body = {
       brand: form.get("brand"),
       model: form.get("model"),
+      type: typeVal || null,
       notes: form.get("notes") || null,
     };
     const url = modal === "edit" ? `/api/devices/${selected!.id}` : "/api/devices";
@@ -54,6 +67,12 @@ export default function DevicesPage() {
     load();
   }
 
+  function typeLabel(type: DeviceType | null) {
+    if (!type) return t("typeUnknown");
+    const key = `type${type}` as "typePHONE" | "typeTABLET" | "typeNOTEBOOK" | "typeDESKTOP";
+    return t(key);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -67,6 +86,7 @@ export default function DevicesPage() {
             <tr>
               <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colBrand")}</th>
               <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colModel")}</th>
+              <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colType")}</th>
               <th className="px-4 py-2 text-left font-medium text-gray-500">{t("colNotes")}</th>
               <th className="px-4 py-2 text-left font-medium text-gray-500">{tc("actions")}</th>
             </tr>
@@ -76,6 +96,7 @@ export default function DevicesPage() {
               <tr key={d.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2 font-medium text-gray-900">{d.brand}</td>
                 <td className="px-4 py-2 text-gray-700">{d.model}</td>
+                <td className="px-4 py-2 text-gray-500">{typeLabel(d.type)}</td>
                 <td className="px-4 py-2 text-gray-500 max-w-xs truncate">{d.notes ?? "—"}</td>
                 <td className="px-4 py-2 flex gap-2">
                   <Button variant="secondary" size="sm" onClick={() => { setSelected(d); setModal("edit"); setError(""); }}>{tc("edit")}</Button>
@@ -84,7 +105,7 @@ export default function DevicesPage() {
               </tr>
             ))}
             {devices.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-6 text-center text-gray-400">{t("empty")}</td></tr>
+              <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">{t("empty")}</td></tr>
             )}
           </tbody>
         </table>
@@ -94,6 +115,9 @@ export default function DevicesPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input id="brand" name="brand" label={t("fieldBrand")} required defaultValue={modal === "edit" ? selected?.brand : ""} />
           <Input id="model" name="model" label={t("fieldModel")} required defaultValue={modal === "edit" ? selected?.model : ""} />
+          <Combobox id="type" name="type" label={t("fieldType")} placeholder="—"
+            options={typeOptions}
+            defaultValue={modal === "edit" ? (selected?.type ?? "") : ""} />
           <Textarea id="notes" name="notes" label={t("fieldNotes")} rows={3} defaultValue={modal === "edit" ? (selected?.notes ?? "") : ""} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">

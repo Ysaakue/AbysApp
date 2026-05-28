@@ -67,11 +67,19 @@ enum MovementType {
   OUT
 }
 
+enum DeviceType {
+  PHONE
+  TABLET
+  NOTEBOOK
+  DESKTOP
+}
+
 model Device {
-  id          Int     @id @default(autoincrement())
-  brand       String
-  model       String
-  notes       String?
+  id    Int         @id @default(autoincrement())
+  brand String
+  model String
+  type  DeviceType?
+  notes String?
 
   orders ServiceOrder[]
 }
@@ -132,5 +140,6 @@ model Comment {
   authorId  Int
   author    User         @relation(fields: [authorId], references: [id])
   text      String
+  important Boolean      @default(false)
   createdAt DateTime     @default(now())
 }

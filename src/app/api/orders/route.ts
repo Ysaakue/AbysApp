@@ -7,7 +7,6 @@ const createSchema = z.object({
   customerId: z.coerce.number().int(),
   deviceId: z.coerce.number().int(),
   problemDescription: z.string().min(1).max(200),
-  statusId: z.coerce.number().int(),
 });
 
 export async function GET(req: NextRequest) {
@@ -45,8 +44,11 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
+  const openStatus = await prisma.orderStatus.findFirst({ where: { name: "Open" } });
+  if (!openStatus) return NextResponse.json({ error: "Default status 'Open' not found. Run the seed." }, { status: 500 });
+
   const order = await prisma.serviceOrder.create({
-    data: { ...parsed.data, createdById: Number(session.user!.id) },
+    data: { ...parsed.data, createdById: Number(session.user!.id), statusId: openStatus.id },
     include: {
       customer: true,
       device: true,

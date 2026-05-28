@@ -4,6 +4,7 @@ import { GET as getOrder, PATCH, DELETE } from "@/app/api/orders/[id]/route";
 import { POST as postService, PATCH as patchService, DELETE as deleteService } from "@/app/api/orders/[id]/services/route";
 import { POST as postPart, PATCH as patchPart, DELETE as deletePart } from "@/app/api/orders/[id]/parts/route";
 import { POST as postComment } from "@/app/api/orders/[id]/comments/route";
+import { PATCH as patchComment } from "@/app/api/orders/[id]/comments/[commentId]/route";
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
@@ -24,7 +25,8 @@ jest.mock("@/lib/prisma", () => {
       orderServiceItem: { create: jest.fn(), update: jest.fn(), delete: jest.fn() },
       orderPartItem: { create: jest.fn(), update: jest.fn(), delete: jest.fn() },
       stockMovement: { create: jest.fn(), updateMany: jest.fn(), deleteMany: jest.fn() },
-      comment: { create: jest.fn() },
+      comment: { create: jest.fn(), update: jest.fn() },
+      orderStatus: { findFirst: jest.fn() },
       $transaction: jest.fn((cb) => cb(mockTx)),
     },
     __mockTx: mockTx,
@@ -68,22 +70,34 @@ describe("GET /api/orders", () => {
 });
 
 describe("POST /api/orders", () => {
-  it("creates an order with session user as creator", async () => {
+  it("creates an order with session user as creator and auto Open status", async () => {
+    (prisma.orderStatus.findFirst as jest.Mock).mockResolvedValue({ id: 1, name: "Open" });
     (prisma.serviceOrder.create as jest.Mock).mockResolvedValue(mockOrder);
     const req = new NextRequest("http://localhost/api/orders", {
       method: "POST",
-      body: JSON.stringify({ customerId: 1, deviceId: 1, problemDescription: "Cracked screen", statusId: 1 }),
+      body: JSON.stringify({ customerId: 1, deviceId: 1, problemDescription: "Cracked screen" }),
       headers: { "Content-Type": "application/json" },
     });
     const res = await postOrder(req);
     expect(res.status).toBe(201);
     expect((prisma.serviceOrder.create as jest.Mock).mock.calls[0][0].data.createdById).toBe(1);
+    expect((prisma.serviceOrder.create as jest.Mock).mock.calls[0][0].data.statusId).toBe(1);
+  });
+
+  it("returns 500 when Open status does not exist", async () => {
+    (prisma.orderStatus.findFirst as jest.Mock).mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/orders", {
+      method: "POST",
+      body: JSON.stringify({ customerId: 1, deviceId: 1, problemDescription: "Cracked screen" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await postOrder(req)).status).toBe(500);
   });
 
   it("returns 400 when problemDescription exceeds 200 chars", async () => {
     const req = new NextRequest("http://localhost/api/orders", {
       method: "POST",
-      body: JSON.stringify({ customerId: 1, deviceId: 1, problemDescription: "x".repeat(201), statusId: 1 }),
+      body: JSON.stringify({ customerId: 1, deviceId: 1, problemDescription: "x".repeat(201) }),
       headers: { "Content-Type": "application/json" },
     });
     expect((await postOrder(req)).status).toBe(400);
@@ -407,5 +421,38 @@ describe("POST /api/orders/[id]/comments", () => {
       headers: { "Content-Type": "application/json" },
     });
     expect((await postComment(req, { params: Promise.resolve({ id: "1" }) })).status).toBe(401);
+  });
+});
+
+describe("PATCH /api/orders/[id]/comments/[commentId]", () => {
+  it("marks a comment as important", async () => {
+    (prisma.comment.update as jest.Mock).mockResolvedValue({ id: 3, text: "Check this!", important: true, author: { id: 1, name: "Admin" } });
+    const req = new NextRequest("http://localhost/api/orders/1/comments/3", {
+      method: "PATCH",
+      body: JSON.stringify({ important: true }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const res = await patchComment(req, { params: Promise.resolve({ commentId: "3" }) });
+    expect(res.status).toBe(200);
+    expect((await res.json()).important).toBe(true);
+  });
+
+  it("returns 400 for missing important field", async () => {
+    const req = new NextRequest("http://localhost/api/orders/1/comments/3", {
+      method: "PATCH",
+      body: JSON.stringify({}),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await patchComment(req, { params: Promise.resolve({ commentId: "3" }) })).status).toBe(400);
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    auth.mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/orders/1/comments/3", {
+      method: "PATCH",
+      body: JSON.stringify({ important: true }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await patchComment(req, { params: Promise.resolve({ commentId: "3" }) })).status).toBe(401);
   });
 });

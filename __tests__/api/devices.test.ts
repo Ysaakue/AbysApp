@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
 const mockSession = { user: { id: "1" } };
-const mockDevice = { id: 1, brand: "Apple", model: "iPhone 14", notes: null };
+const mockDevice = { id: 1, brand: "Apple", model: "iPhone 14", type: null, notes: null };
 
 jest.mock("@/lib/prisma", () => ({
   prisma: {
@@ -41,7 +41,7 @@ describe("GET /api/devices", () => {
 });
 
 describe("POST /api/devices", () => {
-  it("creates a device", async () => {
+  it("creates a device without type", async () => {
     (prisma.device.create as jest.Mock).mockResolvedValue(mockDevice);
     const req = new NextRequest("http://localhost/api/devices", {
       method: "POST",
@@ -49,6 +49,25 @@ describe("POST /api/devices", () => {
       headers: { "Content-Type": "application/json" },
     });
     expect((await POST(req)).status).toBe(201);
+  });
+
+  it("creates a device with a valid type", async () => {
+    (prisma.device.create as jest.Mock).mockResolvedValue({ ...mockDevice, type: "PHONE" });
+    const req = new NextRequest("http://localhost/api/devices", {
+      method: "POST",
+      body: JSON.stringify({ brand: "Apple", model: "iPhone 14", type: "PHONE" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await POST(req)).status).toBe(201);
+  });
+
+  it("returns 400 for invalid type value", async () => {
+    const req = new NextRequest("http://localhost/api/devices", {
+      method: "POST",
+      body: JSON.stringify({ brand: "Apple", model: "iPhone 14", type: "SMARTWATCH" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await POST(req)).status).toBe(400);
   });
 
   it("returns 400 when brand is missing", async () => {

@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { OrderPdf, type PdfLabels } from "@/lib/pdf/OrderPdf";
 import { loadMessages } from "@/lib/pdfMessages";
-import React from "react";
 
 const orderInclude = {
   customer: { select: { name: true, phone: true, email: true } },
@@ -68,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const labels = buildLabels(messages as Record<string, Record<string, string>>);
 
   const buffer = await renderToBuffer(
-    React.createElement(OrderPdf, { order, includeComments, labels, locale })
+    <OrderPdf order={order} includeComments={includeComments} labels={labels} locale={locale} />
   );
 
   return new Response(buffer, {

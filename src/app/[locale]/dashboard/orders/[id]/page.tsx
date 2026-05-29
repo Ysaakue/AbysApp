@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useTranslations, useFormatter } from "next-intl";
+import { useTranslations, useFormatter, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -36,10 +36,12 @@ interface OrderStatus { id: number; name: string }
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("orderDetail");
   const tc = useTranslations("common");
   const format = useFormatter();
   const [order, setOrder] = useState<Order | null>(null);
+  const [exportModal, setExportModal] = useState(false);
   const [services, setServices] = useState<ServiceCatalog[]>([]);
   const [parts, setParts] = useState<PartCatalog[]>([]);
   const [statuses, setStatuses] = useState<OrderStatus[]>([]);
@@ -130,6 +132,11 @@ export default function OrderDetailPage() {
     });
   }
 
+  function triggerExport(includeComments: boolean) {
+    setExportModal(false);
+    window.open(`/api/orders/${id}/export?includeComments=${includeComments}&locale=${locale}`, "_blank");
+  }
+
   async function removeItem(type: "service" | "part", itemId: number) {
     if (!confirm(t("removeConfirm"))) return;
     const endpoint = type === "service" ? `/api/orders/${id}/services` : `/api/orders/${id}/parts`;
@@ -153,6 +160,9 @@ export default function OrderDetailPage() {
           style={{ backgroundColor: order.status.color ?? "#6B7280" }}>
           {order.status.name}
         </span>
+        <div className="ml-auto">
+          <Button variant="secondary" size="sm" onClick={() => setExportModal(true)}>{t("exportBtn")}</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -338,6 +348,14 @@ export default function OrderDetailPage() {
           </form>
         </Modal>
       )}
+
+      <Modal open={exportModal} onClose={() => setExportModal(false)} title={t("exportModalTitle")}>
+        <p className="text-sm text-gray-700">{t("exportModalQuestion")}</p>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="secondary" onClick={() => triggerExport(false)}>{tc("no")}</Button>
+          <Button onClick={() => triggerExport(true)}>{tc("yes")}</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

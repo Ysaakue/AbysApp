@@ -20,7 +20,9 @@
     "back": "← Back",
     "actions": "Actions",
     "loading": "Loading...",
-    "error": "An error occurred."
+    "error": "An error occurred.",
+    "yes": "Yes",
+    "no": "No"
   },
   "localeSwitcher": {
     "label": "Language"
@@ -189,7 +191,15 @@
     "selectPart": "Select part...",
     "fieldUnitPrice": "Unit Price (R$)",
     "fieldQty": "Quantity",
-    "removeConfirm": "Remove this item?"
+    "removeConfirm": "Remove this item?",
+    "exportBtn": "Export PDF",
+    "exportModalTitle": "Export PDF",
+    "exportModalQuestion": "Include important comments in the export?",
+    "pdfTitle": "Service Order",
+    "pdfTotal": "Total",
+    "pdfCreatedBy": "Created by",
+    "pdfCreatedAt": "Created",
+    "pdfCompletedAt": "Completed"
   },
   "orderStatuses": {
     "title": "Order Statuses",

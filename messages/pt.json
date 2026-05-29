@@ -20,7 +20,9 @@
     "back": "← Voltar",
     "actions": "Ações",
     "loading": "Carregando...",
-    "error": "Ocorreu um erro."
+    "error": "Ocorreu um erro.",
+    "yes": "Sim",
+    "no": "Não"
   },
   "localeSwitcher": {
     "label": "Idioma"
@@ -189,7 +191,15 @@
     "selectPart": "Selecione a peça...",
     "fieldUnitPrice": "Preço Unitário (R$)",
     "fieldQty": "Quantidade",
-    "removeConfirm": "Remover este item?"
+    "removeConfirm": "Remover este item?",
+    "exportBtn": "Exportar PDF",
+    "exportModalTitle": "Exportar PDF",
+    "exportModalQuestion": "Incluir comentários importantes na exportação?",
+    "pdfTitle": "Ordem de Serviço",
+    "pdfTotal": "Total",
+    "pdfCreatedBy": "Criado por",
+    "pdfCreatedAt": "Criado em",
+    "pdfCompletedAt": "Concluído em"
   },
   "orderStatuses": {
     "title": "Status de Ordens",

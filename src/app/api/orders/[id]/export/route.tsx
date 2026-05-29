@@ -66,8 +66,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const messages = await loadMessages(locale);
   const labels = buildLabels(messages as Record<string, Record<string, string>>);
 
+  const serializedOrder = {
+    ...order,
+    services: order.services.map((s) => ({ ...s, unitPrice: s.unitPrice.toString() })),
+    parts: order.parts.map((p) => ({ ...p, unitPrice: p.unitPrice.toString() })),
+  };
+
   const buffer = await renderToBuffer(
-    <OrderPdf order={order} includeComments={includeComments} labels={labels} locale={locale} />
+    <OrderPdf order={serializedOrder} includeComments={includeComments} labels={labels} locale={locale} />
   );
 
   return new Response(buffer, {

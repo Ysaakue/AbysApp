@@ -212,7 +212,7 @@ function fmtCurrency(val: string | number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(val));
 }
 
-function fmtDate(dateStr: string, locale: string): string {
+function fmtDate(dateStr: Date | string, locale: string): string {
   const intlLocale = locale === "pt" ? "pt-BR" : "en-US";
   return new Intl.DateTimeFormat(intlLocale, {
     day: "2-digit",

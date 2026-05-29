@@ -6,15 +6,15 @@ type DeviceType = "PHONE" | "TABLET" | "NOTEBOOK" | "DESKTOP";
 interface PdfOrder {
   id: number;
   problemDescription: string;
-  createdAt: string;
-  completedAt: string | null;
+  createdAt: Date | string;
+  completedAt: Date | string | null;
   customer: { name: string; phone: string; email: string | null };
   device: { brand: string; model: string; type: DeviceType | null };
   status: { name: string };
   createdBy: { name: string };
   services: { id: number; unitPrice: string; quantity: number; service: { name: string } }[];
   parts: { id: number; unitPrice: string; quantity: number; part: { name: string } }[];
-  comments: { id: number; text: string; important: boolean; createdAt: string; author: { name: string } }[];
+  comments: { id: number; text: string; important: boolean; createdAt: Date | string; author: { name: string } }[];
 }
 
 export interface PdfLabels {

@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const openStatus = await prisma.orderStatus.findFirst({ where: { name: "Open" } });
-  if (!openStatus) return NextResponse.json({ error: "Default status 'Open' not found. Run the seed." }, { status: 500 });
+  const openStatus = await prisma.orderStatus.findFirst({ where: { name: "Aberto" } });
+  if (!openStatus) return NextResponse.json({ error: "Default status 'Aberto' not found. Run the seed." }, { status: 500 });
 
   const order = await prisma.serviceOrder.create({
     data: { ...parsed.data, createdById: Number(session.user!.id), statusId: openStatus.id },

@@ -22,11 +22,11 @@ async function main() {
   console.log(`Seeded admin user: ${admin.email}`);
 
   const statuses = [
-    { name: "Open", color: "#3B82F6" },
-    { name: "In Progress", color: "#F59E0B" },
-    { name: "Waiting Parts", color: "#8B5CF6" },
-    { name: "Completed", color: "#10B981" },
-    { name: "Cancelled", color: "#EF4444" },
+    { name: "Aberto", color: "#3B82F6" },
+    { name: "Em Andamento", color: "#F59E0B" },
+    { name: "Aguardando Peças", color: "#8B5CF6" },
+    { name: "Concluído", color: "#10B981" },
+    { name: "Cancelado", color: "#EF4444" },
   ];
 
   for (const status of statuses) {

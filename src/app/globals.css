@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+@theme {
+  /* Brand blue scale — remaps all blue-* Tailwind classes to ABYS brand colors */
+  --color-blue-50:  #eef2ff;
+  --color-blue-100: #dde8ff;
+  --color-blue-200: #b3caff;
+  --color-blue-500: #3165D6;
+  --color-blue-600: #3165D6;
+  --color-blue-700: #412DD1;
+  --color-blue-800: #2a50b0;
+  --color-blue-900: #133988;
+
+  /* Brand fonts */
+  --font-sans:  var(--font-inter), system-ui, sans-serif;
+  --font-brand: var(--font-exo2), "Rajdhani", sans-serif;
+}
+
 :root {
   --background: #f9fafb;
   --foreground: #111827;
@@ -8,5 +24,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

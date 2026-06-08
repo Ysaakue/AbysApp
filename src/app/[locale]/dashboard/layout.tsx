@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { AbysIcon } from "@/components/ui/AbysIcon";
 
 export default async function DashboardLayout({
   children,
@@ -28,10 +29,13 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-blue-700 text-white shadow">
+      <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <span className="font-bold text-lg tracking-tight">AbysApp</span>
+            <div className="flex items-center gap-2">
+              <AbysIcon className="h-7 w-7 text-white" />
+              <span className="font-brand font-extrabold text-xl tracking-tight">ABYS</span>
+            </div>
             <div className="flex items-center gap-4">
               <LocaleSwitcher userId={session.user?.id} />
               <form

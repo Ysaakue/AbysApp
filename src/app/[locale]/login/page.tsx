@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { AbysIcon } from "@/components/ui/AbysIcon";
 
 export default function LoginPage() {
   const t = useTranslations("login");
@@ -37,9 +38,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">AbysApp</h1>
-          <p className="text-gray-500 mt-1">{t("subtitle")}</p>
+        <div className="flex flex-col items-center gap-1 mb-8">
+          <AbysIcon className="h-16 w-16 text-blue-900 mb-1" />
+          <h1 className="font-brand font-extrabold text-3xl text-blue-900 tracking-tight">ABYS</h1>
+          <p className="text-sm text-blue-600 tracking-widest uppercase font-medium mt-0.5">
+            {t("subtitle")}
+          </p>
         </div>
 
         <form

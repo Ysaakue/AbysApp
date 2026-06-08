@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 
 export const metadata: Metadata = {
-  title: "AbysApp - Service Orders",
-  description: "Tech support service order management system",
+  title: "ABYS — Assistência Técnica",
+  description: "Sistema de gestão de ordens de serviço",
 };
 
 export function generateStaticParams() {
